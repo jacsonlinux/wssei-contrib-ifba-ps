@@ -1,0 +1,33 @@
+# Arquivos temporários gerados pelo sistema
+*~
+.env
+.modulo.env
+.testselenium.env
+dist/
+compatibilidade.json
+
+# Arquivos temporários criados pelo ambiente de desenvolvimento Vagrant
+.vagrant/
+Vagrantfile
+
+# Arquivos de projeto de editores de texto e IDEs
+*.sublime-project
+*.sublime-workspace
+.phpintel/
+
+# Arquivos de configuração e variáveis do ambiente local  
+.env
+.modulo.env
+.testselenium.env
+.vscode/
+
+dist/
+node_modules/
+src/config/ConfiguracaoMdWSSEI.php
+tests/Postman/SEI.postman_environment_substituido.json
+tests/Postman/newman/
+
+#testes funcionais
+.p3/
+.pytest_cache/
+src/vendor/

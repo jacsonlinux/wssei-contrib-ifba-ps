@@ -1,0 +1,868 @@
+{
+  "info": {
+    "name": "Filtros de pesquisa — laboratório sintético descartável",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const base=pm.environment.get('labBaseUrl') || '';",
+          "if (pm.environment.get('laboratorioDescartavel') !== 'SIM' || !/^http:\\/\\/127\\.0\\.0\\.1(?::[0-9]+)?\\/sei\\/modulos\\/wssei\\/controlador_ws\\.php\\/api\\/v2$/.test(base)) { pm.execution.skipRequest(); throw new Error('Somente laboratório local descartável'); }"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Série 321: só documentos desta série",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "token",
+            "value": "{{token}}"
+          }
+        ],
+        "url": "{{labBaseUrl}}/processo/pesquisar?idSerie=321&limit=10&start=0"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200 e envelope', () => { pm.response.to.have.status(200); const r=pm.response.json(); pm.expect(r.sucesso).to.eql(true); pm.expect(r.data).to.be.an('array'); pm.expect(Number(r.total)).to.be.at.least(r.data.length); });",
+              "pm.test('Ocorrências documentais exatas', () => { const r=pm.response.json(); pm.expect(r.data.map(x=>String(x.documento.idDocumento))).to.eql([\"2004\", \"2003\", \"2001\"]); pm.expect(Number(r.total)).to.eql(3); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tipo 654: todas as ocorrências têm o tipo solicitado",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "token",
+            "value": "{{token}}"
+          }
+        ],
+        "url": "{{labBaseUrl}}/processo/pesquisar?idTipoProcedimento=654&limit=10&start=0"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200 e envelope', () => { pm.response.to.have.status(200); const r=pm.response.json(); pm.expect(r.sucesso).to.eql(true); pm.expect(r.data).to.be.an('array'); pm.expect(Number(r.total)).to.be.at.least(r.data.length); });",
+              "pm.test('Tipo processual',()=>{const r=pm.response.json(); pm.expect(r.data.length).to.be.above(0); r.data.forEach(x=>pm.expect(String(x.idTipoProcedimento)).to.eql('654'));});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Interseção série 321 e tipo 654",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "token",
+            "value": "{{token}}"
+          }
+        ],
+        "url": "{{labBaseUrl}}/processo/pesquisar?idSerie=321&idTipoProcedimento=654&limit=10&start=0"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200 e envelope', () => { pm.response.to.have.status(200); const r=pm.response.json(); pm.expect(r.sucesso).to.eql(true); pm.expect(r.data).to.be.an('array'); pm.expect(Number(r.total)).to.be.at.least(r.data.length); });",
+              "pm.test('Ocorrências documentais exatas', () => { const r=pm.response.json(); pm.expect(r.data.map(x=>String(x.documento.idDocumento))).to.eql([\"2004\", \"2001\"]); pm.expect(Number(r.total)).to.eql(2); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Só novos filtros, sem texto, primeira página",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "token",
+            "value": "{{token}}"
+          }
+        ],
+        "url": "{{labBaseUrl}}/processo/pesquisar?idSerie=321&idTipoProcedimento=654&limit=1&start=0"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200 e envelope', () => { pm.response.to.have.status(200); const r=pm.response.json(); pm.expect(r.sucesso).to.eql(true); pm.expect(r.data).to.be.an('array'); pm.expect(Number(r.total)).to.be.at.least(r.data.length); });",
+              "pm.test('Primeira página e total',()=>{const r=pm.response.json(); pm.expect(r.data.map(x=>String(x.documento.idDocumento))).to.eql(['2004']); pm.expect(Number(r.total)).to.eql(2);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Segunda página conserva interseção e total",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "token",
+            "value": "{{token}}"
+          }
+        ],
+        "url": "{{labBaseUrl}}/processo/pesquisar?idSerie=321&idTipoProcedimento=654&limit=1&start=1"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200 e envelope', () => { pm.response.to.have.status(200); const r=pm.response.json(); pm.expect(r.sucesso).to.eql(true); pm.expect(r.data).to.be.an('array'); pm.expect(Number(r.total)).to.be.at.least(r.data.length); });",
+              "pm.test('Segunda página e total',()=>{const r=pm.response.json(); pm.expect(r.data.map(x=>String(x.documento.idDocumento))).to.eql(['2001']); pm.expect(Number(r.total)).to.eql(2);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Vazio: idSerie=999999",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "token",
+            "value": "{{token}}"
+          }
+        ],
+        "url": "{{labBaseUrl}}/processo/pesquisar?idSerie=999999"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200 e envelope', () => { pm.response.to.have.status(200); const r=pm.response.json(); pm.expect(r.sucesso).to.eql(true); pm.expect(r.data).to.be.an('array'); pm.expect(Number(r.total)).to.be.at.least(r.data.length); });",
+              "pm.test('Vazio sem ampliar consulta',()=>{const r=pm.response.json();pm.expect(r.data).to.eql([]);pm.expect(Number(r.total)).to.eql(0);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Vazio: idTipoProcedimento=999999",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "token",
+            "value": "{{token}}"
+          }
+        ],
+        "url": "{{labBaseUrl}}/processo/pesquisar?idTipoProcedimento=999999"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200 e envelope', () => { pm.response.to.have.status(200); const r=pm.response.json(); pm.expect(r.sucesso).to.eql(true); pm.expect(r.data).to.be.an('array'); pm.expect(Number(r.total)).to.be.at.least(r.data.length); });",
+              "pm.test('Vazio sem ampliar consulta',()=>{const r=pm.response.json();pm.expect(r.data).to.eql([]);pm.expect(Number(r.total)).to.eql(0);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Vazio: idSerie=322&idTipoProcedimento=655",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "token",
+            "value": "{{token}}"
+          }
+        ],
+        "url": "{{labBaseUrl}}/processo/pesquisar?idSerie=322&idTipoProcedimento=655"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200 e envelope', () => { pm.response.to.have.status(200); const r=pm.response.json(); pm.expect(r.sucesso).to.eql(true); pm.expect(r.data).to.be.an('array'); pm.expect(Number(r.total)).to.be.at.least(r.data.length); });",
+              "pm.test('Vazio sem ampliar consulta',()=>{const r=pm.response.json();pm.expect(r.data).to.eql([]);pm.expect(Number(r.total)).to.eql(0);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rejeita idSerie=",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "token",
+            "value": "{{token}}"
+          }
+        ],
+        "url": "{{labBaseUrl}}/processo/pesquisar?idSerie="
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400 e erro',()=>{pm.response.to.have.status(400);pm.expect(pm.response.json().sucesso).to.eql(false);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rejeita idSerie=0",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "token",
+            "value": "{{token}}"
+          }
+        ],
+        "url": "{{labBaseUrl}}/processo/pesquisar?idSerie=0"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400 e erro',()=>{pm.response.to.have.status(400);pm.expect(pm.response.json().sucesso).to.eql(false);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rejeita idSerie=-1",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "token",
+            "value": "{{token}}"
+          }
+        ],
+        "url": "{{labBaseUrl}}/processo/pesquisar?idSerie=-1"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400 e erro',()=>{pm.response.to.have.status(400);pm.expect(pm.response.json().sucesso).to.eql(false);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rejeita idSerie=abc",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "token",
+            "value": "{{token}}"
+          }
+        ],
+        "url": "{{labBaseUrl}}/processo/pesquisar?idSerie=abc"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400 e erro',()=>{pm.response.to.have.status(400);pm.expect(pm.response.json().sucesso).to.eql(false);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rejeita idSerie=1.5",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "token",
+            "value": "{{token}}"
+          }
+        ],
+        "url": "{{labBaseUrl}}/processo/pesquisar?idSerie=1.5"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400 e erro',()=>{pm.response.to.have.status(400);pm.expect(pm.response.json().sucesso).to.eql(false);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rejeita idSerie[]=321",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "token",
+            "value": "{{token}}"
+          }
+        ],
+        "url": "{{labBaseUrl}}/processo/pesquisar?idSerie[]=321"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400 e erro',()=>{pm.response.to.have.status(400);pm.expect(pm.response.json().sucesso).to.eql(false);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rejeita idSerie=2147483648",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "token",
+            "value": "{{token}}"
+          }
+        ],
+        "url": "{{labBaseUrl}}/processo/pesquisar?idSerie=2147483648"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400 e erro',()=>{pm.response.to.have.status(400);pm.expect(pm.response.json().sucesso).to.eql(false);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rejeita idSerie=1%20OR%20*%3A*",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "token",
+            "value": "{{token}}"
+          }
+        ],
+        "url": "{{labBaseUrl}}/processo/pesquisar?idSerie=1%20OR%20*%3A*"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400 e erro',()=>{pm.response.to.have.status(400);pm.expect(pm.response.json().sucesso).to.eql(false);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rejeita idTipoProcedimento=",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "token",
+            "value": "{{token}}"
+          }
+        ],
+        "url": "{{labBaseUrl}}/processo/pesquisar?idTipoProcedimento="
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400 e erro',()=>{pm.response.to.have.status(400);pm.expect(pm.response.json().sucesso).to.eql(false);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rejeita idTipoProcedimento=0",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "token",
+            "value": "{{token}}"
+          }
+        ],
+        "url": "{{labBaseUrl}}/processo/pesquisar?idTipoProcedimento=0"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400 e erro',()=>{pm.response.to.have.status(400);pm.expect(pm.response.json().sucesso).to.eql(false);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rejeita idTipoProcedimento=-1",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "token",
+            "value": "{{token}}"
+          }
+        ],
+        "url": "{{labBaseUrl}}/processo/pesquisar?idTipoProcedimento=-1"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400 e erro',()=>{pm.response.to.have.status(400);pm.expect(pm.response.json().sucesso).to.eql(false);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rejeita idTipoProcedimento=abc",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "token",
+            "value": "{{token}}"
+          }
+        ],
+        "url": "{{labBaseUrl}}/processo/pesquisar?idTipoProcedimento=abc"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400 e erro',()=>{pm.response.to.have.status(400);pm.expect(pm.response.json().sucesso).to.eql(false);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rejeita idTipoProcedimento=1.5",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "token",
+            "value": "{{token}}"
+          }
+        ],
+        "url": "{{labBaseUrl}}/processo/pesquisar?idTipoProcedimento=1.5"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400 e erro',()=>{pm.response.to.have.status(400);pm.expect(pm.response.json().sucesso).to.eql(false);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rejeita idTipoProcedimento[]=321",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "token",
+            "value": "{{token}}"
+          }
+        ],
+        "url": "{{labBaseUrl}}/processo/pesquisar?idTipoProcedimento[]=321"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400 e erro',()=>{pm.response.to.have.status(400);pm.expect(pm.response.json().sucesso).to.eql(false);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rejeita idTipoProcedimento=2147483648",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "token",
+            "value": "{{token}}"
+          }
+        ],
+        "url": "{{labBaseUrl}}/processo/pesquisar?idTipoProcedimento=2147483648"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400 e erro',()=>{pm.response.to.have.status(400);pm.expect(pm.response.json().sucesso).to.eql(false);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rejeita idTipoProcedimento=1%20OR%20*%3A*",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "token",
+            "value": "{{token}}"
+          }
+        ],
+        "url": "{{labBaseUrl}}/processo/pesquisar?idTipoProcedimento=1%20OR%20*%3A*"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400 e erro',()=>{pm.response.to.have.status(400);pm.expect(pm.response.json().sucesso).to.eql(false);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Autenticação obrigatória: ausente",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "token",
+            "value": ""
+          }
+        ],
+        "url": "{{labBaseUrl}}/processo/pesquisar?idSerie=321"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Autenticação bloqueia',()=>{pm.expect([401,403]).to.include(pm.response.code);pm.expect(pm.response.json().sucesso).to.eql(false);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Autenticação obrigatória: inválido",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "token",
+            "value": "token-sintetico-invalido"
+          }
+        ],
+        "url": "{{labBaseUrl}}/processo/pesquisar?idSerie=321"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Autenticação bloqueia',()=>{pm.expect([401,403]).to.include(pm.response.code);pm.expect(pm.response.json().sucesso).to.eql(false);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Uma pessoa, várias séries",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "token",
+            "value": "{{token}}"
+          }
+        ],
+        "url": "{{labBaseUrl}}/processo/pesquisar?idContatoAssinante=7&limit=10&start=0"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP e resultados',()=>{pm.response.to.have.status(200);const r=pm.response.json();pm.expect(r.sucesso).to.eql(true);pm.expect(r.data.map(x=>String(x.documento.idDocumento))).to.eql([\"2004\", \"2003\", \"2001\"]);pm.expect(Number(r.total)).to.eql(3);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Série, tipo e pessoa",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "token",
+            "value": "{{token}}"
+          }
+        ],
+        "url": "{{labBaseUrl}}/processo/pesquisar?idContatoAssinante=7&idSerie=321&idTipoProcedimento=654&limit=10&start=0"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP e resultados',()=>{pm.response.to.have.status(200);const r=pm.response.json();pm.expect(r.sucesso).to.eql(true);pm.expect(r.data.map(x=>String(x.documento.idDocumento))).to.eql([\"2004\", \"2001\"]);pm.expect(Number(r.total)).to.eql(2);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Outra pessoa no mesmo documento",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "token",
+            "value": "{{token}}"
+          }
+        ],
+        "url": "{{labBaseUrl}}/processo/pesquisar?idContatoAssinante=17&idSerie=321&idTipoProcedimento=654&limit=10&start=0"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP e resultados',()=>{pm.response.to.have.status(200);const r=pm.response.json();pm.expect(r.sucesso).to.eql(true);pm.expect(r.data.map(x=>String(x.documento.idDocumento))).to.eql([\"2001\"]);pm.expect(Number(r.total)).to.eql(1);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rejeita idContatoAssinante=",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "token",
+            "value": "{{token}}"
+          }
+        ],
+        "url": "{{labBaseUrl}}/processo/pesquisar?idContatoAssinante="
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Rejeita filtro',()=>{pm.response.to.have.status(400);pm.expect(pm.response.json().sucesso).to.eql(false);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rejeita idContatoAssinante=0",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "token",
+            "value": "{{token}}"
+          }
+        ],
+        "url": "{{labBaseUrl}}/processo/pesquisar?idContatoAssinante=0"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Rejeita filtro',()=>{pm.response.to.have.status(400);pm.expect(pm.response.json().sucesso).to.eql(false);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rejeita idContatoAssinante=-1",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "token",
+            "value": "{{token}}"
+          }
+        ],
+        "url": "{{labBaseUrl}}/processo/pesquisar?idContatoAssinante=-1"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Rejeita filtro',()=>{pm.response.to.have.status(400);pm.expect(pm.response.json().sucesso).to.eql(false);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rejeita idContatoAssinante[]=7",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "token",
+            "value": "{{token}}"
+          }
+        ],
+        "url": "{{labBaseUrl}}/processo/pesquisar?idContatoAssinante[]=7"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Rejeita filtro',()=>{pm.response.to.have.status(400);pm.expect(pm.response.json().sucesso).to.eql(false);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rejeita idContatoAssinante=2147483648",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "token",
+            "value": "{{token}}"
+          }
+        ],
+        "url": "{{labBaseUrl}}/processo/pesquisar?idContatoAssinante=2147483648"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Rejeita filtro',()=>{pm.response.to.have.status(400);pm.expect(pm.response.json().sucesso).to.eql(false);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rejeita idContatoAssinante=7%20OR%20*%3A*",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "token",
+            "value": "{{token}}"
+          }
+        ],
+        "url": "{{labBaseUrl}}/processo/pesquisar?idContatoAssinante=7%20OR%20*%3A*"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Rejeita filtro',()=>{pm.response.to.have.status(400);pm.expect(pm.response.json().sucesso).to.eql(false);});"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

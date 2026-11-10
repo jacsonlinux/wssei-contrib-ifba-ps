@@ -1,0 +1,14 @@
+# Local credentials, private evidence and generated artifacts
+**/.env
+**/.env.*
+**/.modulo.env
+**/.testselenium.env
+**/vendor/
+**/node_modules/
+**/__pycache__/
+**/dist/
+**/newman/
+**/*.dmp
+**/*.log
+**/*.jsonl
+**/.git/
