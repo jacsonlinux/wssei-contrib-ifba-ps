@@ -89,6 +89,44 @@ Essa etapa ocorreu em laboratório descartável, sem acessar o SEI real.
 Houve anteriormente inspeções autorizadas de leitura para entender a pesquisa,
 mas elas não foram testes da versão modificada. Nada foi instalado na produção.
 
+## Etapas técnicas realizadas, do clone ao GitHub
+
+1. **Clone do projeto oficial:** copiamos o código público de `pengovbr/mod-wssei`,
+   usando como base o WSSEI 3.0.5.
+2. **Branch de desenvolvimento:** criamos `feat/filtros-pesquisa` no checkout
+   original para trabalhar na contribuição.
+3. **Novos parâmetros REST:** acrescentamos `idSerie`, `idTipoProcedimento` e
+   `idContatoAssinante` à rota existente `/api/v2/processo/pesquisar`.
+4. **Validação das entradas:** aceitamos IDs positivos e rejeitamos valores
+   inválidos com HTTP 400, antes de executar a pesquisa.
+5. **Transporte dos critérios:** ajustamos o DTO, objeto que leva os parâmetros
+   recebidos até a rotina de pesquisa, para incluir o contato assinante.
+6. **Consulta Solr:** combinamos os novos filtros com os critérios existentes.
+   Para assinante, o candidato exige um ID numérico completo, evitando confundir
+   IDs semelhantes, conforme a representação prevista para homologação.
+7. **Preservação da estrutura:** mantivemos a rota, o índice e os mecanismos
+   existentes de autenticação, autorização, retorno, ordenação e paginação,
+   sem alterar as aplicações consumidoras.
+8. **Documentação da API:** atualizamos o Swagger em JSON e YAML, com os novos
+   parâmetros, exemplos e respostas de erro.
+9. **Laboratório e testes:** criamos testes reproduzíveis em ambiente descartável,
+   com dados fictícios, sem instalar o candidato no SEI real.
+10. **Validação funcional local:** executamos os testes em PHP 8.2.35 e 8.5.12,
+    além de oito consultas geradas pelo PHP em Solr 9.6.1 com o schema público do
+    SEI. Os testes passaram no recorte descrito neste documento.
+11. **Revisão automática do código:** executamos PHPCS e Rector nos três arquivos
+    PHP alterados, sem erros, avisos ou alterações sugeridas.
+12. **Documentos de apoio:** preparamos README, AGENTS, roteiro técnico, este
+    resumo e a proposta de homologação para a administração do SEI/IFBA.
+13. **Versionamento e GitHub privado:** criamos um commit com uma cópia
+    independente do código e dos documentos e enviamos ao repositório privado
+    [wssei-contrib-ifba-ps](https://github.com/jacsonlinux/wssei-contrib-ifba-ps).
+    O checkout original foi preservado para preparar a futura contribuição ao PEN.
+
+**Até aqui:** código candidato implementado e validado localmente. Não houve
+instalação em produção ou abertura de PR ao PEN. A compatibilidade com a indexação
+e as permissões da versão SEI alvo ainda depende da homologação autorizada.
+
 ## O que falta e como avançar no IFBA
 
 Ainda precisamos confirmar como a versão SEI alvo grava os contatos no índice
